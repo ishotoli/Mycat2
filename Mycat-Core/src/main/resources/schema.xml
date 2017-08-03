@@ -1,10 +1,10 @@
 <schemas>
     
-	<schema name="mysql" nopartion="true" default-db="mysql:test">
+	<schema name="test" nopartion="true" default-db="mycat:mycat">
 	</schema>
 	
-	<schema name="mycat" nopartion="false" default-db="db2:mysql1">
+	<!--schema name="mycat" nopartion="true" default-db="mycat:mycat">
 	  	<table name="shardt1" type="1" sharding-key="id" sharding-rule="auto-sharding-1"/>
-	</schema>
+	</schema-->
 	
 </schemas>
