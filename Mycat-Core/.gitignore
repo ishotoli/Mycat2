@@ -1,2 +1,6 @@
 /target/
-**/.idea/
+*.rtmp
+*.wtmp
+*.iml
+.idea
+/logs

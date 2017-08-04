@@ -8,9 +8,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * 存放当前所有连接的信息，包括客户端和服务端等，以及Network部分所使用共用对象
  *
@@ -18,12 +15,10 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class NetSystem {
-	private static final Logger LOGGER = LoggerFactory.getLogger(NetSystem.class);
 	public static final int RUNNING = 0;
 	public static final int SHUTING_DOWN = -1;
 	// private static final Logger LOGGER = Logger.getLogger("NetSystem");
 	private static NetSystem INSTANCE;
-	private final SharedBufferPool bufferPool;
 	// 用来执行那些耗时的任务
 	private final NameableExecutor executor;
 	// 用来执行定时任务
@@ -38,17 +33,12 @@ public class NetSystem {
 		return INSTANCE;
 	}
 
-	public NetSystem(SharedBufferPool bufferPool, NameableExecutor executor, NamebleScheduledExecutor timer)
+	public NetSystem(NameableExecutor executor, NamebleScheduledExecutor timer)
 			throws IOException {
-		this.bufferPool = bufferPool;
 		this.executor = executor;
 		this.timer = timer;
 		this.allConnections = new ConcurrentHashMap<Long, Connection>();
 		INSTANCE = this;
-	}
-
-	public SharedBufferPool getBufferPool() {
-		return bufferPool;
 	}
 
 	public NIOConnector getConnector() {
@@ -61,9 +51,9 @@ public class NetSystem {
 
 	public int getWriteQueueSize() {
 		int total = 0;
-		for (Connection con : allConnections.values()) {
+//		for (Connection con : allConnections.values()) {
 			//total += con.getWriteQueue().size();
-		}
+//		}
 
 		return total;
 

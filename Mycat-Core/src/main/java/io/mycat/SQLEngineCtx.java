@@ -33,6 +33,8 @@ import io.mycat.backend.MySQLBackendConnectionFactory;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.beans.SchemaBean;
 import io.mycat.engine.SQLCommandHandler;
+import io.mycat.engine.dataChannel.DataChannel;
+import io.mycat.engine.dataChannel.DefaultDataTransferChannel;
 import io.mycat.net2.NIOReactor;
 
 /**
@@ -45,7 +47,8 @@ public class SQLEngineCtx {
 	protected final static Logger LOGGER = LoggerFactory.getLogger(SQLEngineCtx.class);
 	
 	final static SQLEngineCtx instance;
-	static {
+	
+	static{
 		instance = new SQLEngineCtx();
 	}
 	
@@ -56,6 +59,24 @@ public class SQLEngineCtx {
 	private SQLCommandHandler partionSchemaSQLCmdHandler;
 	
 	private  MySQLBackendConnectionFactory backendMySQLConFactory;
+	
+	/**
+	 * 当前线程上下文 
+	 */
+	private static final ThreadLocal<Map<Object,Object>> currentContext = new ThreadLocal<Map<Object,Object>>(){
+		protected Map<Object,Object> initialValue() {
+			Map<Object,Object> map = new HashMap<>();
+			map.put(currentSession, new HashMap<>());
+			return map;
+		};
+	};
+	
+	private final DataChannel dataTransferChannel = new DefaultDataTransferChannel();
+	
+	/**
+	 * mycat 当前会话session
+	 */
+	public static final String currentSession = "data_transfer_session";
 	
 	/**
 	 * 系统中所有的NIO Reactor
@@ -72,6 +93,10 @@ private Map<String,MySQLReplicatSet> msqlRepSetMap=new HashMap<String,MySQLRepli
  */
 private Map<String,SchemaBean> mycatSchemaMap=new HashMap<String,SchemaBean>();
 
+/**
+ * 默认Schema,取配置文件种第一个Schema
+ */
+private SchemaBean defaultSchemaBean;
 
 public  SQLCommandHandler getNomalSchemaSQLCmdHandler()
 {
@@ -114,6 +139,8 @@ public MySQLReplicatSet getMySQLReplicatSet(String repsetName)
 {
 	return this.msqlRepSetMap.get(repsetName);
 }
+
+
 public MySQLBackendConnectionFactory getBackendMySQLConFactory() {
 	return backendMySQLConFactory;
 }
@@ -129,6 +156,9 @@ protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMy
  
  protected void addSchemaBean(SchemaBean schemaBean)
  {
+	 if(defaultSchemaBean == null ) { // call by MycatCore,在配置文件加载时初始化
+		 defaultSchemaBean = schemaBean;
+	 }
 	 this.mycatSchemaMap.put(schemaBean.getName(), schemaBean);
  }
  
@@ -136,4 +166,22 @@ protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMy
  {
  	return this.mycatSchemaMap.get(schema);
  }
+ 
+ public SchemaBean getDefaultMycatSchema() {
+	 return this.defaultSchemaBean;
+ }
+ 
+ 
+	public Object getCurrentContext(Object key) {
+		Map<Object,Object> map = currentContext.get();
+		return map.get(key);
+	}
+	
+	public void setCurrentContext(Object key,Object value){
+		Map<Object,Object> map = currentContext.get();
+		map.put(key, value);
+	}
+	public DataChannel getDataTransferChannel() {
+		return dataTransferChannel;
+	}
 }
